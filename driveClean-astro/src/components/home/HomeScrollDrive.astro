@@ -1,0 +1,107 @@
+<!-- Per-tile scroll scrub: each tile fades as it enters the viewport (L→R, T→B in grid order) -->
+<script is:inline>
+  (function () {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    var TX = -20;
+    var TY = 32;
+
+    function clamp(n, min, max) {
+      return Math.max(min, Math.min(max, n));
+    }
+
+    /** Progress 0→1 as element top moves from `startY` down to `endY` (viewport px). */
+    function elementProgress(rect, vh, startRatio, endRatio) {
+      var start = vh * startRatio;
+      var end = vh * endRatio;
+      var range = start - end;
+      if (range <= 1) return rect.top <= end ? 1 : 0;
+      return clamp((start - rect.top) / range, 0, 1);
+    }
+
+    function applyReveal(el, p, rect, vh) {
+      if (rect.bottom < 0 || rect.top > vh) {
+        el.style.opacity = '0';
+        el.style.transform =
+          'translate3d(' + TX + 'px,' + TY + 'px,0)';
+        return;
+      }
+      var t = 1 - p;
+      el.style.opacity = String(0.02 + p * 0.98);
+      el.style.transform =
+        'translate3d(' + t * TX + 'px,' + t * TY + 'px,0)';
+    }
+
+    function initBlock(block) {
+      var introEls = block.querySelectorAll('[data-scroll-intro]');
+      var tiles = block.querySelectorAll('[data-tile-index]');
+      var ctas = block.querySelectorAll('[data-scroll-cta]');
+
+      return function update(vh) {
+        introEls.forEach(function (el) {
+          var order = parseInt(el.getAttribute('data-scroll-intro') || '0', 10);
+          var rect = el.getBoundingClientRect();
+          var start = 0.94 - order * 0.03;
+          var end = 0.72 - order * 0.04;
+          applyReveal(el, elementProgress(rect, vh, start, end), rect, vh);
+        });
+
+        tiles.forEach(function (el) {
+          var i = parseInt(el.getAttribute('data-tile-index') || '0', 10);
+          var rect = el.getBoundingClientRect();
+          /* Slight index bias keeps same-row tiles ordered L→R when tops align */
+          var start = 0.9 - i * 0.008;
+          var end = 0.52 - i * 0.006;
+          applyReveal(el, elementProgress(rect, vh, start, end), rect, vh);
+        });
+
+        ctas.forEach(function (el) {
+          var rect = el.getBoundingClientRect();
+          applyReveal(el, elementProgress(rect, vh, 0.88, 0.58), rect, vh);
+        });
+      };
+    }
+
+    function init() {
+      var blocks = document.querySelectorAll('[data-scroll-block]');
+      if (!blocks.length) return;
+
+      var updaters = [];
+      blocks.forEach(function (block) {
+        updaters.push(initBlock(block));
+      });
+
+      var ticking = false;
+
+      function update() {
+        var vh = window.innerHeight;
+        updaters.forEach(function (fn) {
+          fn(vh);
+        });
+        ticking = false;
+      }
+
+      function requestUpdate() {
+        if (!ticking) {
+          ticking = true;
+          requestAnimationFrame(update);
+        }
+      }
+
+      window.addEventListener('scroll', requestUpdate, { passive: true });
+      window.addEventListener('resize', requestUpdate, { passive: true });
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', requestUpdate);
+        window.visualViewport.addEventListener('scroll', requestUpdate);
+      }
+      window.addEventListener('load', requestUpdate);
+      requestUpdate();
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  })();
+</script>

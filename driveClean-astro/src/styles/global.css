@@ -1,0 +1,202 @@
+@import "tailwindcss";
+
+/* Fixed dark header clearance (book and similar pages) */
+:root {
+  --site-header-height: 4.75rem;
+}
+
+#services {
+  scroll-margin-top: var(--site-header-height);
+}
+
+/* Google Place Autocomplete (New) on booking contact step */
+.booking-place-autocomplete-host {
+  display: block;
+  width: 100%;
+  min-height: 3rem;
+}
+
+.booking-place-autocomplete {
+  display: block;
+  width: 100%;
+  min-height: 3rem;
+  /* Light scheme keeps the embedded input readable on the dark booking UI */
+  color-scheme: light;
+}
+
+/* Full-screen book page transition */
+.page-transition-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  visibility: hidden;
+  opacity: 0;
+  background: #000;
+}
+
+html.book-page-entering .book-page-content {
+  opacity: 0;
+}
+
+html.book-page-entered .book-page-content {
+  animation: book-content-in 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes book-content-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-transition-overlay {
+    display: none !important;
+  }
+
+  html.book-page-entering .book-page-content,
+  html.book-page-entered .book-page-content {
+    opacity: 1;
+    animation: none;
+  }
+
+  .booking-funnel-panel,
+  .booking-funnel-panel--out-forward,
+  .booking-funnel-panel--out-back,
+  .booking-funnel-panel--in-forward,
+  .booking-funnel-panel--in-back {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* Booking funnel step transitions (Continue / Back only) */
+.booking-funnel-panel--out-forward {
+  animation: funnel-step-out-forward 0.34s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+.booking-funnel-panel--out-back {
+  animation: funnel-step-out-back 0.34s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+.booking-funnel-panel--in-forward {
+  animation: funnel-step-in-forward 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.booking-funnel-panel--in-back {
+  animation: funnel-step-in-back 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes funnel-step-out-forward {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+}
+
+@keyframes funnel-step-out-back {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+@keyframes funnel-step-in-forward {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes funnel-step-in-back {
+  from {
+    opacity: 0;
+    transform: translateY(-18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* TikTok promo hero — live-style floating hearts */
+.tiktok-promo-hero {
+  position: relative;
+  overflow: hidden;
+}
+
+.tiktok-promo-hero--celebrate {
+  border-color: rgb(16 185 129 / 0.5) !important;
+  box-shadow: 0 0 32px rgb(16 185 129 / 0.15);
+}
+
+.tiktok-promo-hero--celebrate .tiktok-live-heart {
+  animation-duration: calc(var(--heart-duration, 2.4s) * 0.75);
+}
+
+.tiktok-hearts-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.tiktok-live-heart {
+  position: absolute;
+  bottom: 0;
+  left: var(--heart-left, 80%);
+  opacity: 0;
+  transform: translateY(0) scale(var(--heart-scale, 1));
+  animation: tiktok-heart-float var(--heart-duration, 2.4s) ease-out infinite;
+  animation-delay: var(--heart-delay, 0s);
+  will-change: transform, opacity;
+}
+
+@keyframes tiktok-heart-float {
+  0% {
+    opacity: 0;
+    transform: translateY(0) translateX(0) scale(calc(var(--heart-scale, 1) * 0.6));
+  }
+  12% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(calc(-1 * var(--heart-rise, 140px)))
+      translateX(var(--heart-drift, 12px))
+      scale(calc(var(--heart-scale, 1) * 1.15));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tiktok-live-heart {
+    animation: none !important;
+    opacity: 0.25;
+    bottom: 20%;
+  }
+
+  .tiktok-live-heart:nth-child(n + 4) {
+    display: none;
+  }
+}

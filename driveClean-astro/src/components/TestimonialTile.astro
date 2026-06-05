@@ -1,0 +1,70 @@
+---
+import type { Testimonial } from '../data/testimonials';
+
+interface Props {
+  review: Testimonial;
+  variant?: 'dark' | 'light';
+  scrollReveal?: boolean;
+  tileIndex?: number;
+}
+
+const { review, variant = 'dark', scrollReveal = false, tileIndex = 0 } = Astro.props;
+const isDark = variant === 'dark';
+---
+
+<article
+  class:list={[
+    'testimonial-tile flex overflow-hidden rounded-2xl border',
+    isDark
+      ? 'border-white/15 bg-black/25 backdrop-blur-sm'
+      : 'border-slate-200 bg-white shadow-sm',
+  ]}
+  {...scrollReveal && {
+    'data-scroll-fade': true,
+    'data-tile-index': String(tileIndex),
+  }}
+>
+  <div
+    class:list={[
+      'testimonial-tile__media relative w-[7.5rem] shrink-0 sm:w-36 md:w-40',
+      isDark ? 'bg-black/40' : 'bg-slate-100',
+    ]}
+  >
+    <img
+      src={review.image}
+      alt={`${review.name} — Drive Clean customer`}
+      width={320}
+      height={480}
+      class="h-full min-h-[11rem] w-full object-cover object-center sm:min-h-[12.5rem]"
+      loading="lazy"
+    />
+  </div>
+
+  <div class="flex min-w-0 flex-1 flex-col justify-center p-5 sm:p-6">
+    <p
+      class:list={[
+        'text-sm leading-relaxed sm:text-[0.9375rem]',
+        isDark ? 'text-white/90' : 'text-slate-700',
+      ]}
+    >
+      <span class="sr-only">Review by {review.name}: </span>
+      "{review.quote}"
+    </p>
+    <footer
+      class:list={[
+        'mt-4 border-t pt-4',
+        isDark ? 'border-white/15' : 'border-slate-100',
+      ]}
+    >
+      <p class:list={['font-semibold', isDark ? 'text-white' : 'text-slate-900']}>
+        {review.name}
+      </p>
+      <p class:list={['mt-0.5 text-xs', isDark ? 'text-white/75' : 'text-slate-600']}>
+        {review.highlight}
+      </p>
+      <p class:list={['mt-1 text-xs', isDark ? 'text-white/55' : 'text-slate-500']}>
+        {review.location}
+      </p>
+    </footer>
+  </div>
+</article>

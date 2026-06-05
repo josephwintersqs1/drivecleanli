@@ -1,0 +1,77 @@
+---
+interface Props {
+  /** Header on dark homepage vs light interior pages */
+  variant?: 'dark' | 'light';
+  size?: 'header' | 'footer';
+  class?: string;
+}
+
+const { variant = 'dark', size = 'header', class: className } = Astro.props;
+const isDark = variant === 'dark';
+const isFooter = size === 'footer';
+---
+
+<a
+  href="/"
+  class:list={['brand-logo group inline-flex items-center gap-2.5 sm:gap-3', className]}
+  aria-label="DRIVE CLEAN Mobile Detailing — home"
+>
+  <img
+    src="/images/logo-car.png"
+    alt=""
+    width={120}
+    height={48}
+    class:list={[
+      'brand-logo__mark w-auto shrink-0',
+      isFooter ? 'h-11 sm:h-12' : 'h-9 sm:h-10',
+      !isDark && 'brand-logo__mark--light',
+    ]}
+    decoding="async"
+  />
+  <span class="flex min-w-0 flex-col leading-none">
+    <span
+      class:list={[
+        'brand-logo__name font-bold uppercase tracking-[0.14em]',
+        isFooter ? 'text-base sm:text-lg' : 'text-sm sm:text-base',
+        isDark ? 'text-white' : 'text-slate-900',
+      ]}
+    >
+      Drive <span class="text-red-600">Clean</span>
+    </span>
+    <span
+      class:list={[
+        'brand-logo__tag mt-1 font-medium tracking-wide',
+        isFooter ? 'text-[11px] sm:text-xs' : 'text-[10px] sm:text-[11px]',
+        isDark ? 'text-white/55' : 'text-slate-500',
+      ]}
+    >
+      Mobile Detailing
+    </span>
+  </span>
+</a>
+
+<style>
+  .brand-logo__mark {
+    transition: transform 0.25s ease;
+  }
+
+  /* PNG has a black plate; screen blend drops it on white headers */
+  .brand-logo__mark--light {
+    mix-blend-mode: screen;
+  }
+
+  .brand-logo:hover .brand-logo__mark,
+  .brand-logo:focus-visible .brand-logo__mark {
+    transform: translateX(-1px);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .brand-logo__mark {
+      transition: none;
+    }
+    .brand-logo:hover .brand-logo__mark,
+    .brand-logo:focus-visible .brand-logo__mark {
+      transform: none;
+    }
+  }
+</style>

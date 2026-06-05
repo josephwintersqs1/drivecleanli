@@ -1,0 +1,132 @@
+---
+/** Full-screen fade used when navigating to /book from in-site links */
+---
+
+<div id="page-transition-overlay" class="page-transition-overlay" aria-hidden="true"></div>
+
+<script is:inline>
+  (function () {
+    var key = 'dc-book-transition';
+    if (
+      sessionStorage.getItem(key) &&
+      location.pathname.indexOf('/book') === 0
+    ) {
+      var style = document.createElement('style');
+      style.id = 'page-transition-boot';
+      style.textContent =
+        '#page-transition-overlay{opacity:1!important;visibility:visible!important}';
+      document.head.appendChild(style);
+    }
+  })();
+</script>
+
+<script>
+  const STORAGE_KEY = 'dc-book-transition';
+  const OVERLAY_ID = 'page-transition-overlay';
+  const FADE_OUT_MS = 520;
+  const FADE_IN_MS = 420;
+
+  function prefersReducedMotion(): boolean {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  function getOverlay(): HTMLElement {
+    const existing = document.getElementById(OVERLAY_ID);
+    if (existing) return existing;
+    const el = document.createElement('div');
+    el.id = OVERLAY_ID;
+    el.className = 'page-transition-overlay';
+    el.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(el);
+    return el;
+  }
+
+  function animateOpacity(
+    el: HTMLElement,
+    to: number,
+    durationMs: number
+  ): Promise<void> {
+    return new Promise((resolve) => {
+      el.style.transition = `opacity ${durationMs}ms cubic-bezier(0.4, 0, 0.2, 1)`;
+      el.style.opacity = String(to);
+      const finish = () => {
+        el.removeEventListener('transitionend', finish);
+        resolve();
+      };
+      el.addEventListener('transitionend', finish);
+      window.setTimeout(resolve, durationMs + 80);
+    });
+  }
+
+  function isBookLink(anchor: HTMLAnchorElement): boolean {
+    const href = anchor.getAttribute('href');
+    if (!href || href.startsWith('#')) return false;
+    try {
+      const url = new URL(href, window.location.origin);
+      return url.origin === window.location.origin && url.pathname.startsWith('/book');
+    } catch {
+      return false;
+    }
+  }
+
+  function initBookEnter(): void {
+    if (!window.location.pathname.startsWith('/book')) return;
+    if (!sessionStorage.getItem(STORAGE_KEY)) return;
+
+    sessionStorage.removeItem(STORAGE_KEY);
+    document.getElementById('page-transition-boot')?.remove();
+
+    const overlay = getOverlay();
+    overlay.style.opacity = '1';
+    overlay.style.visibility = 'visible';
+
+    document.documentElement.classList.add('book-page-entering');
+
+    requestAnimationFrame(() => {
+      void animateOpacity(overlay, 0, FADE_OUT_MS).then(() => {
+        overlay.style.visibility = 'hidden';
+        document.documentElement.classList.remove('book-page-entering');
+        document.documentElement.classList.add('book-page-entered');
+      });
+    });
+  }
+
+  function handleBookNavClick(event: MouseEvent): void {
+    if (prefersReducedMotion()) return;
+
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+
+    const anchor = target.closest('a');
+    if (!anchor || !isBookLink(anchor)) return;
+    if (
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey ||
+      anchor.target === '_blank' ||
+      anchor.hasAttribute('download')
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+
+    const href = anchor.href;
+    sessionStorage.setItem(STORAGE_KEY, '1');
+
+    const overlay = getOverlay();
+    overlay.style.visibility = 'visible';
+    overlay.style.pointerEvents = 'auto';
+    overlay.style.opacity = '0';
+
+    requestAnimationFrame(() => {
+      void animateOpacity(overlay, 1, FADE_IN_MS).then(() => {
+        window.location.assign(href);
+      });
+    });
+  }
+
+  initBookEnter();
+  document.addEventListener('click', handleBookNavClick);
+</script>

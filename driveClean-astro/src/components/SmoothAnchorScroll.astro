@@ -1,0 +1,157 @@
+---
+/** Smooth scroll to homepage #services (nav, hero CTAs, cross-page links) */
+---
+
+<script is:inline>
+  (function () {
+    var home =
+      location.pathname === '/' || location.pathname === '';
+    if (!home) return;
+    if (
+      location.hash === '#services' ||
+      sessionStorage.getItem('dc-scroll-services')
+    ) {
+      if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+      window.scrollTo(0, 0);
+    }
+  })();
+</script>
+
+<script>
+  const TARGET_ID = 'services';
+  const STORAGE_KEY = 'dc-scroll-services';
+  const HEADER_VAR = '--site-header-height';
+  const SCROLL_MS = 720;
+
+  function prefersReducedMotion(): boolean {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  function getHeaderOffset(): number {
+    const raw = getComputedStyle(document.documentElement)
+      .getPropertyValue(HEADER_VAR)
+      .trim();
+    const rootSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    if (raw.endsWith('rem')) return parseFloat(raw) * rootSize;
+    if (raw.endsWith('px')) return parseFloat(raw);
+    return 76;
+  }
+
+  function isHomePath(pathname: string): boolean {
+    return pathname === '/' || pathname === '';
+  }
+
+  function isServicesLink(anchor: HTMLAnchorElement): boolean {
+    const href = anchor.getAttribute('href');
+    if (!href) return false;
+    return (
+      href === '#services' ||
+      href === '/#services' ||
+      href.endsWith('/#services') ||
+      href.endsWith('#services')
+    );
+  }
+
+  function easeInOutCubic(t: number): number {
+    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  }
+
+  function animateScrollTo(targetY: number): Promise<void> {
+    const startY = window.scrollY;
+    const distance = targetY - startY;
+    if (Math.abs(distance) < 2) return Promise.resolve();
+
+    const start = performance.now();
+
+    return new Promise((resolve) => {
+      function step(now: number) {
+        const elapsed = now - start;
+        const progress = Math.min(elapsed / SCROLL_MS, 1);
+        const eased = easeInOutCubic(progress);
+        window.scrollTo(0, startY + distance * eased);
+        if (progress < 1) {
+          requestAnimationFrame(step);
+        } else {
+          resolve();
+        }
+      }
+      requestAnimationFrame(step);
+    });
+  }
+
+  async function scrollToServices(smooth: boolean): Promise<boolean> {
+    const el = document.getElementById(TARGET_ID);
+    if (!el) return false;
+
+    const top =
+      el.getBoundingClientRect().top + window.scrollY - getHeaderOffset();
+
+    if (smooth && !prefersReducedMotion()) {
+      await animateScrollTo(Math.max(0, top));
+    } else {
+      window.scrollTo({ top: Math.max(0, top), behavior: 'instant' });
+    }
+    return true;
+  }
+
+  function handleServicesClick(event: MouseEvent): void {
+    const anchor = (event.target as Element).closest('a');
+    if (!anchor || !isServicesLink(anchor)) return;
+    if (
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey ||
+      anchor.target === '_blank'
+    ) {
+      return;
+    }
+
+    let url: URL;
+    try {
+      url = new URL(anchor.href, window.location.origin);
+    } catch {
+      return;
+    }
+
+    if (!isHomePath(url.pathname)) return;
+
+    if (isHomePath(window.location.pathname)) {
+      event.preventDefault();
+      if (window.location.hash !== '#services') {
+        history.pushState(null, '', '#services');
+      }
+      void scrollToServices(true);
+      return;
+    }
+
+    event.preventDefault();
+    sessionStorage.setItem(STORAGE_KEY, '1');
+    window.location.assign('/#services');
+  }
+
+  function initServicesScrollOnLoad(): void {
+    const pending =
+      window.location.hash === '#services' ||
+      sessionStorage.getItem(STORAGE_KEY) === '1';
+
+    if (!pending || !isHomePath(window.location.pathname)) return;
+
+    sessionStorage.removeItem(STORAGE_KEY);
+
+    if (prefersReducedMotion()) return;
+
+    const tryScroll = () => {
+      if (document.getElementById(TARGET_ID)) {
+        void scrollToServices(true);
+      } else {
+        requestAnimationFrame(tryScroll);
+      }
+    };
+
+    requestAnimationFrame(tryScroll);
+  }
+
+  document.addEventListener('click', handleServicesClick);
+  initServicesScrollOnLoad();
+</script>

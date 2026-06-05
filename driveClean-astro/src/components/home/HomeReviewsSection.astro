@@ -1,0 +1,47 @@
+---
+import TestimonialsCarousel from '../TestimonialsCarousel.astro';
+---
+
+<section
+  id="reviews"
+  class="px-4 pb-28 pt-16 sm:pb-32 sm:pt-20"
+  aria-labelledby="home-reviews-heading"
+>
+  <div class="mx-auto max-w-6xl">
+    <header class="mx-auto max-w-3xl text-center">
+      <p class="text-xs font-semibold uppercase tracking-[0.3em] text-white/80">
+        Testimonials
+      </p>
+      <h2
+        id="home-reviews-heading"
+        class="mt-3 text-3xl font-light tracking-tight text-white sm:text-4xl md:text-5xl"
+      >
+        Customer reviews
+      </h2>
+      <p class="mt-5 text-base leading-relaxed text-white/85 sm:text-lg">
+        Read what Suffolk County and Long Island drivers say about Drive Clean mobile
+        detailing — then book your appointment online in minutes.
+      </p>
+    </header>
+
+    <TestimonialsCarousel variant="dark" />
+
+    <div
+      class="mt-14 rounded-2xl border border-white/20 bg-black/20 px-6 py-10 text-center backdrop-blur-sm sm:px-12"
+    >
+      <h3 class="text-xl font-semibold text-white sm:text-2xl">
+        Ready for a spotless vehicle?
+      </h3>
+      <p class="mx-auto mt-3 max-w-lg text-sm text-white/85 sm:text-base">
+        Join our happy customers across Suffolk County. Pick your service, choose a time,
+        and pay securely online.
+      </p>
+      <a
+        href="/book"
+        class="mt-6 inline-block rounded-full bg-white px-10 py-3.5 text-sm font-semibold uppercase tracking-wider text-red-800 transition hover:bg-white/90"
+      >
+        Book your detail now
+      </a>
+    </div>
+  </div>
+</section>

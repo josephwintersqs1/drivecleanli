@@ -1,0 +1,35 @@
+<!-- Sets --hero-fade and --hero-drift on .hero--fixed from scroll position -->
+<script is:inline>
+  (function () {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    var hero = document.querySelector('.hero--fixed');
+    if (!hero) return;
+
+    var ticking = false;
+
+    function update() {
+      var vh = window.innerHeight;
+      var progress = Math.min(1, Math.max(0, window.scrollY / (vh * 0.92)));
+      var fade = 1 - progress;
+
+      hero.style.setProperty('--hero-fade', String(fade));
+      hero.style.setProperty('--hero-drift', progress * 32 + 'px');
+      hero.style.setProperty('--hero-scale', String(1 + progress * 0.06));
+      hero.style.setProperty('--hero-scroll-hint', String(Math.max(0, 1 - progress * 3)));
+
+      ticking = false;
+    }
+
+    function onScroll() {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(update);
+      }
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    update();
+  })();
+</script>

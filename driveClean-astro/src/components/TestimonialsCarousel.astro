@@ -1,0 +1,343 @@
+---
+import { testimonials } from '../data/testimonials';
+
+interface Props {
+  variant?: 'dark' | 'light';
+}
+
+const { variant = 'dark' } = Astro.props;
+const isDark = variant === 'dark';
+const count = testimonials.length;
+---
+
+{
+  count > 0 && (
+    <div
+      class:list={[
+        'testimonials-carousel mx-auto mt-14 max-w-4xl outline-none',
+        isDark ? 'is-dark' : 'is-light',
+      ]}
+      data-testimonials-carousel
+      tabindex="0"
+    >
+      <p class="sr-only" data-carousel-status>
+        Customer reviews carousel, slide 1 of {count}
+      </p>
+
+      <div class="relative min-h-[11rem] sm:min-h-[12.5rem]" data-carousel-track>
+        {testimonials.map((review, i) => (
+          <article
+            class:list={[
+              'testimonials-carousel__slide flex overflow-hidden rounded-2xl border backdrop-blur-sm transition-opacity duration-500',
+              isDark ? 'border-white/15 bg-black/25' : 'border-slate-200 bg-white shadow-sm',
+              i === 0 ? 'relative opacity-100' : 'pointer-events-none absolute inset-0 opacity-0',
+            ]}
+            data-carousel-slide
+            data-index={i}
+            aria-hidden={i !== 0}
+          >
+            <div
+              class:list={[
+                'relative w-[7.5rem] shrink-0 sm:w-36 md:w-40',
+                isDark ? 'bg-black/40' : 'bg-slate-100',
+              ]}
+            >
+              <button
+                type="button"
+                class="testimonials-carousel__photo-btn group relative block h-full min-h-[11rem] w-full cursor-zoom-in sm:min-h-[12.5rem]"
+                data-lightbox-open
+                data-lightbox-src={review.image}
+                data-lightbox-title={`${review.name} — ${review.highlight}`}
+                data-lightbox-alt={`${review.name} — Drive Clean customer photo`}
+                aria-label={`View larger photo from ${review.name}`}
+              >
+                <img
+                  src={review.image}
+                  alt=""
+                  width={320}
+                  height={480}
+                  class="h-full min-h-[11rem] w-full object-cover object-center transition group-hover:brightness-110 sm:min-h-[12.5rem]"
+                  loading={i === 0 ? 'eager' : 'lazy'}
+                />
+                <span
+                  class="absolute inset-0 flex items-center justify-center bg-black/40 text-[10px] font-semibold uppercase tracking-wider text-white opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100"
+                  aria-hidden="true"
+                >
+                  View photo
+                </span>
+              </button>
+            </div>
+            <div class="flex min-w-0 flex-1 flex-col justify-center p-5 sm:p-6">
+              <p
+                class:list={[
+                  'text-sm leading-relaxed sm:text-[0.9375rem]',
+                  isDark ? 'text-white/90' : 'text-slate-700',
+                ]}
+              >
+                <span class="sr-only">Review by {review.name}: </span>
+                &ldquo;{review.quote}&rdquo;
+              </p>
+              <footer
+                class:list={[
+                  'mt-4 border-t pt-4',
+                  isDark ? 'border-white/15' : 'border-slate-100',
+                ]}
+              >
+                <p class:list={['font-semibold', isDark ? 'text-white' : 'text-slate-900']}>
+                  {review.name}
+                </p>
+                <p class:list={['mt-0.5 text-xs', isDark ? 'text-white/75' : 'text-slate-600']}>
+                  {review.highlight}
+                </p>
+                <p class:list={['mt-1 text-xs', isDark ? 'text-white/55' : 'text-slate-500']}>
+                  {review.location}
+                </p>
+              </footer>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      <div class="mt-6 flex items-center justify-center gap-4">
+        <button
+          type="button"
+          class:list={[
+            'testimonials-carousel__nav inline-flex h-11 w-11 items-center justify-center rounded-full border transition focus:outline-none focus:ring-2 focus:ring-red-500',
+            isDark
+              ? 'border-white/25 text-white hover:border-white/50 hover:bg-white/10'
+              : 'border-slate-300 text-slate-800 hover:border-slate-400 hover:bg-slate-50',
+          ]}
+          data-carousel-prev
+          aria-label="Previous review"
+        >
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 18l-6-6 6-6" />
+          </svg>
+        </button>
+
+        <div class="flex items-center gap-2" role="tablist" aria-label="Choose review">
+          {testimonials.map((review, i) => (
+            <button
+              type="button"
+              role="tab"
+              aria-selected={i === 0}
+              aria-label={`Review ${i + 1}, ${review.name}`}
+              class:list={[
+                'testimonials-carousel__dot h-2.5 rounded-full transition-all',
+                i === 0
+                  ? isDark
+                    ? 'w-8 bg-white'
+                    : 'w-8 bg-red-600'
+                  : isDark
+                    ? 'w-2.5 bg-white/30 hover:bg-white/50'
+                    : 'w-2.5 bg-slate-300 hover:bg-slate-400',
+              ]}
+              data-carousel-dot
+              data-index={i}
+            />
+          ))}
+        </div>
+
+        <button
+          type="button"
+          class:list={[
+            'testimonials-carousel__nav inline-flex h-11 w-11 items-center justify-center rounded-full border transition focus:outline-none focus:ring-2 focus:ring-red-500',
+            isDark
+              ? 'border-white/25 text-white hover:border-white/50 hover:bg-white/10'
+              : 'border-slate-300 text-slate-800 hover:border-slate-400 hover:bg-slate-50',
+          ]}
+          data-carousel-next
+          aria-label="Next review"
+        >
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+
+      <p
+        class:list={[
+          'mt-3 text-center text-xs',
+          isDark ? 'text-white/50' : 'text-slate-500',
+        ]}
+        data-carousel-counter
+        aria-live="polite"
+      >
+        1 / {count} — {testimonials[0].name}
+      </p>
+    </div>
+  )
+}
+
+<div
+  class="testimonial-lightbox pointer-events-none fixed inset-0 z-[200] hidden items-center justify-center p-4 opacity-0 transition-opacity duration-200 sm:p-8"
+  data-testimonial-lightbox
+  aria-hidden="true"
+>
+  <button
+    type="button"
+    class="testimonial-lightbox__backdrop absolute inset-0 bg-black/90 backdrop-blur-sm"
+    data-lightbox-close
+    aria-label="Close enlarged photo"
+  />
+  <div
+    class="relative z-10 flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-black shadow-2xl ring-1 ring-white/15"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="testimonial-lightbox-title"
+  >
+    <div class="flex items-center justify-between gap-4 border-b border-white/10 px-4 py-3 sm:px-5">
+      <p id="testimonial-lightbox-title" class="text-sm font-semibold text-white sm:text-base" data-lightbox-title>
+      </p>
+      <button
+        type="button"
+        class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/25 text-white transition hover:border-white/50 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-red-500"
+        data-lightbox-close
+        aria-label="Close"
+      >
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <div class="flex min-h-[12rem] flex-1 items-center justify-center bg-black p-4 sm:min-h-[16rem] sm:p-6">
+      <img
+        src=""
+        alt=""
+        width={1024}
+        height={1536}
+        class="max-h-[min(75vh,720px)] w-auto max-w-full object-contain"
+        data-lightbox-img
+      />
+    </div>
+  </div>
+</div>
+
+<script>
+  function initTestimonialsCarousels() {
+    document.querySelectorAll('[data-testimonials-carousel]').forEach(function (root) {
+      if (root.dataset.carouselReady === 'true') return;
+      root.dataset.carouselReady = 'true';
+
+      var slides = Array.from(root.querySelectorAll('[data-carousel-slide]'));
+      var dots = Array.from(root.querySelectorAll('[data-carousel-dot]'));
+      var status = root.querySelector('[data-carousel-status]');
+      var counter = root.querySelector('[data-carousel-counter]');
+      var names = slides.map(function (s) {
+        return s.querySelector('footer p')?.textContent?.trim() || '';
+      });
+      var count = slides.length;
+      var index = 0;
+
+      function show(next) {
+        if (!count) return;
+        index = ((next % count) + count) % count;
+        slides.forEach(function (slide, i) {
+          var active = i === index;
+          slide.classList.toggle('relative', active);
+          slide.classList.toggle('opacity-100', active);
+          slide.classList.toggle('pointer-events-none', !active);
+          slide.classList.toggle('absolute', !active);
+          slide.classList.toggle('inset-0', !active);
+          slide.classList.toggle('opacity-0', !active);
+          slide.setAttribute('aria-hidden', active ? 'false' : 'true');
+        });
+        dots.forEach(function (dot, i) {
+          var active = i === index;
+          dot.setAttribute('aria-selected', active ? 'true' : 'false');
+          dot.classList.toggle('w-8', active);
+          dot.classList.toggle('w-2.5', !active);
+          if (root.classList.contains('is-dark')) {
+            dot.classList.toggle('bg-white', active);
+            dot.classList.toggle('bg-white/30', !active);
+          } else {
+            dot.classList.toggle('bg-red-600', active);
+            dot.classList.toggle('bg-slate-300', !active);
+          }
+        });
+        if (status) status.textContent = 'Customer reviews carousel, slide ' + (index + 1) + ' of ' + count;
+        if (counter) counter.textContent = index + 1 + ' / ' + count + ' — ' + names[index];
+      }
+
+      root.querySelector('[data-carousel-prev]')?.addEventListener('click', function () {
+        show(index - 1);
+      });
+      root.querySelector('[data-carousel-next]')?.addEventListener('click', function () {
+        show(index + 1);
+      });
+      dots.forEach(function (dot) {
+        dot.addEventListener('click', function () {
+          show(parseInt(dot.getAttribute('data-index') || '0', 10));
+        });
+      });
+
+      root.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          show(index - 1);
+        }
+        if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          show(index + 1);
+        }
+      });
+    });
+
+    var lightbox = document.querySelector('[data-testimonial-lightbox]');
+    if (lightbox && lightbox.dataset.lightboxReady !== 'true') {
+      lightbox.dataset.lightboxReady = 'true';
+      var img = lightbox.querySelector('[data-lightbox-img]');
+      var title = lightbox.querySelector('[data-lightbox-title]');
+      var prevOverflow = '';
+
+      function openLightbox(src, label, alt) {
+        if (!img || !src) return;
+        img.src = src;
+        img.alt = alt || '';
+        if (title) title.textContent = label || '';
+        prevOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        lightbox.classList.remove('hidden', 'pointer-events-none');
+        lightbox.classList.add('flex', 'opacity-100');
+        lightbox.setAttribute('aria-hidden', 'false');
+      }
+
+      function closeLightbox() {
+        lightbox.classList.add('hidden', 'pointer-events-none');
+        lightbox.classList.remove('flex', 'opacity-100');
+        lightbox.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = prevOverflow;
+        if (img) img.src = '';
+      }
+
+      document.querySelectorAll('[data-lightbox-open]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          openLightbox(
+            btn.getAttribute('data-lightbox-src') || '',
+            btn.getAttribute('data-lightbox-title') || '',
+            btn.getAttribute('data-lightbox-alt') || ''
+          );
+        });
+      });
+
+      lightbox.querySelectorAll('[data-lightbox-close]').forEach(function (btn) {
+        btn.addEventListener('click', closeLightbox);
+      });
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && lightbox.getAttribute('aria-hidden') === 'false') {
+          closeLightbox();
+        }
+      });
+    }
+  }
+
+  initTestimonialsCarousels();
+  document.addEventListener('astro:page-load', initTestimonialsCarousels);
+</script>
+
+<style>
+  .testimonial-lightbox.flex {
+    pointer-events: auto;
+  }
+</style>
