@@ -3,12 +3,18 @@ export const prerender = false;
 
 import Layout from '../layouts/Layout.astro';
 import { BookingWizard } from '../components/booking/BookingWizard';
+import { decodeConfirmationFromRedirect } from '../adapters/bookingConfirmation';
 import { getServiceById } from '../data/services';
 
 const confirmed = Astro.url.searchParams.get('confirmed') === '1';
 const paymentParam = Astro.url.searchParams.get('payment');
 const confirmedPaymentMode =
   paymentParam === 'deposit' ? 'deposit' : ('full' as const);
+const confirmationEncoded = Astro.url.searchParams.get('d') ?? '';
+const squareOrderId = Astro.url.searchParams.get('orderId') ?? '';
+const initialConfirmation = confirmationEncoded
+  ? decodeConfirmationFromRedirect(confirmationEncoded)
+  : null;
 const serviceParam = Astro.url.searchParams.get('service')?.trim() ?? '';
 const preselected = serviceParam ? getServiceById(serviceParam) : undefined;
 const initialServiceId = preselected ? serviceParam : undefined;
@@ -23,31 +29,41 @@ const initialServiceId = preselected ? serviceParam : undefined;
   description="Book mobile car detailing online — choose your package, options, and pay securely."
 >
   <section class="book-page-content mx-auto max-w-5xl px-4 pb-12 pt-8 sm:pb-16 sm:pt-10">
-    <p class="text-xs font-semibold uppercase tracking-[0.3em] text-red-600">
-      Book online
-    </p>
-    <h1 class="mt-3 text-3xl font-light tracking-tight text-white sm:text-4xl">
-      Book your <span class="font-bold text-red-600">detail</span>
-    </h1>
     {
-      preselected ? (
-        <p class="mt-4 text-base leading-relaxed text-white/65">
-          You selected <strong class="text-white">{preselected.name}</strong>. Configure
-          your vehicle and add-ons, pick a time, and pay securely online.
-        </p>
+      confirmed ? (
+        <h1 class="sr-only">Booking confirmed</h1>
       ) : (
-        <p class="mt-4 text-base leading-relaxed text-white/65">
-          Choose your service, configure options, pick a time, and pay in full or with a
-          50% deposit.
-        </p>
+        <>
+          <p class="text-xs font-semibold uppercase tracking-[0.3em] text-red-600">
+            Book online
+          </p>
+          <h1 class="mt-3 text-3xl font-light tracking-tight text-white sm:text-4xl">
+            Book your <span class="font-bold text-red-600">detail</span>
+          </h1>
+          {
+            preselected ? (
+              <p class="mt-4 text-base leading-relaxed text-white/65">
+                You selected <strong class="text-white">{preselected.name}</strong>. Configure
+                your vehicle and add-ons, pick a time, and pay securely online.
+              </p>
+            ) : (
+              <p class="mt-4 text-base leading-relaxed text-white/65">
+                Choose your service, configure options, pick a time, and pay in full or with a
+                50% deposit.
+              </p>
+            )
+          }
+        </>
       )
     }
 
-    <div class="mt-10 min-h-[28rem]">
+    <div class:list={['min-h-[28rem]', confirmed ? 'mt-4' : 'mt-10']}>
       <BookingWizard
         client:only="react"
         confirmed={confirmed}
         confirmedPaymentMode={confirmedPaymentMode}
+        initialConfirmation={initialConfirmation}
+        squareOrderId={squareOrderId}
         initialServiceId={initialServiceId}
       >
         <div

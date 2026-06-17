@@ -1,10 +1,14 @@
 import { SquareClient, SquareEnvironment } from 'square';
 import {
+  buildBookingConfirmationSnapshot,
+  encodeConfirmationForRedirect,
+} from '../adapters/bookingConfirmation';
+import {
   buildSquareOrderMetadata,
   expandSquareOrderMetadata,
 } from '../adapters/squareOrderMetadata';
 import type { BookingPayload } from '../types/booking';
-import { buildBookingLineItems } from '../data/services';
+import { buildBookingLineItems, type BookingLineItem } from '../data/services';
 import { getBookingPriceSummary, TIKTOK_PROMO_PERCENT } from './tiktok-promo';
 
 export function getSquareClient(): SquareClient {
@@ -30,7 +34,7 @@ export async function createPaymentLink(
     throw new Error('SQUARE_LOCATION_ID is not configured');
   }
 
-  const { discountAmount, dueToday, balanceDue } = getBookingPriceSummary(
+  const { total, discountAmount, dueToday, balanceDue } = getBookingPriceSummary(
     booking.serviceId,
     booking.vehicleTierId,
     booking.addOnIds,
@@ -43,6 +47,11 @@ export async function createPaymentLink(
     booking.vehicleTierId,
     booking.addOnIds
   );
+
+  const chargeLineItems =
+    booking.tiktokPromo && discountAmount > 0
+      ? scaleLineItemsToTotalCents(fullLineItems, total * 100)
+      : fullLineItems;
 
   let lineItems;
 
@@ -60,7 +69,7 @@ export async function createPaymentLink(
       },
     ];
   } else {
-    lineItems = fullLineItems.map((item) => ({
+    lineItems = chargeLineItems.map((item) => ({
       name: item.name,
       quantity: '1',
       basePriceMoney: {
@@ -68,21 +77,14 @@ export async function createPaymentLink(
         currency: 'USD',
       },
     }));
-
-    if (booking.tiktokPromo && discountAmount > 0) {
-      lineItems.push({
-        name: `TikTok share promo (${TIKTOK_PROMO_PERCENT}% off)`,
-        quantity: '1',
-        basePriceMoney: {
-          amount: BigInt(-discountAmount * 100),
-          currency: 'USD',
-        },
-      });
-    }
   }
 
   const client = getSquareClient();
   const idempotencyKey = crypto.randomUUID();
+  const siteUrl = import.meta.env.SITE_URL ?? 'http://localhost:4321';
+  const confirmationToken = encodeConfirmationForRedirect(
+    buildBookingConfirmationSnapshot(booking)
+  );
 
   const response = await client.checkout.paymentLinks.create({
     idempotencyKey,
@@ -92,7 +94,7 @@ export async function createPaymentLink(
       metadata: buildSquareOrderMetadata(booking),
     },
     checkoutOptions: {
-      redirectUrl: `${import.meta.env.SITE_URL ?? 'http://localhost:4321'}/book?confirmed=1&payment=${booking.paymentMode}`,
+      redirectUrl: `${siteUrl}/book?confirmed=1&payment=${booking.paymentMode}&d=${confirmationToken}`,
     },
     paymentNote: `DriveClean: ${booking.firstName} ${booking.lastName}${
       booking.paymentMode === 'deposit' ? ' (50% deposit)' : ''
@@ -113,6 +115,31 @@ function formatUsd(amount: number): string {
     currency: 'USD',
     minimumFractionDigits: 0,
   }).format(amount);
+}
+
+/** Square requires non-negative line items; spread promo discount across items. */
+function scaleLineItemsToTotalCents(
+  items: BookingLineItem[],
+  targetTotalCents: number
+): BookingLineItem[] {
+  const subtotalCents = items.reduce((sum, item) => sum + item.amountCents, 0);
+  if (subtotalCents === 0 || subtotalCents === targetTotalCents) return items;
+
+  const scaled = items.map((item) => ({
+    ...item,
+    amountCents: Math.round((item.amountCents * targetTotalCents) / subtotalCents),
+  }));
+
+  const sum = scaled.reduce((total, item) => total + item.amountCents, 0);
+  const diff = targetTotalCents - sum;
+  if (diff !== 0 && scaled.length > 0) {
+    scaled[0] = {
+      ...scaled[0],
+      amountCents: Math.max(0, scaled[0].amountCents + diff),
+    };
+  }
+
+  return scaled;
 }
 
 /** Booking fields stored on the Square order at checkout. */

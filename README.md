@@ -13,7 +13,6 @@ Instant booking website for a mobile car detailing service. Built with Astro (SS
 ## Setup
 
 ```bash
-cd driveClean-astro
 cp .env.example .env
 # Fill in env vars (see below)
 npm install

@@ -20,6 +20,9 @@ import { PromoStep } from './PromoStep';
 import { ContactStep } from './ContactStep';
 import { ReviewStep } from './ReviewStep';
 import { BookingStepPanel } from './BookingStepPanel';
+import { saveBookingConfirmation } from '../../lib/booking-confirmation-storage';
+import { buildBookingConfirmationSnapshot } from '../../adapters/bookingConfirmation';
+import { BookingConfirmedStep } from './BookingConfirmedStep';
 import { bookingBtnPrimary, bookingBtnSecondary } from './booking-styles';
 
 const STEP_LABELS = ['Service', 'Configure', 'Offer', 'Schedule', 'Contact', 'Review'];
@@ -29,9 +32,14 @@ const PROMO_STEP = 3;
 const SCHEDULE_STEP = 4;
 const CONTACT_STEP = 5;
 
+import type { BookingConfirmationSnapshot } from '../../adapters/bookingConfirmation';
+import type { PaymentMode } from '../../data/services';
+
 interface BookingWizardProps {
   confirmed?: boolean;
   confirmedPaymentMode?: 'full' | 'deposit';
+  initialConfirmation?: BookingConfirmationSnapshot | null;
+  squareOrderId?: string;
   initialServiceId?: string;
 }
 
@@ -50,6 +58,8 @@ function buildInitialState(initialServiceId?: string): BookingState {
 export function BookingWizard({
   confirmed,
   confirmedPaymentMode = 'full',
+  initialConfirmation = null,
+  squareOrderId = '',
   initialServiceId,
 }: BookingWizardProps) {
   const [state, setState] = useState<BookingState>(() =>
@@ -138,6 +148,24 @@ export function BookingWizard({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Checkout failed');
+
+      saveBookingConfirmation(
+        buildBookingConfirmationSnapshot({
+          serviceId: state.serviceId,
+          vehicleTierId: state.vehicleTierId,
+          addOnIds: state.addOnIds,
+          paymentMode: state.paymentMode,
+          slotStart: state.slotStart,
+          slotEnd: state.slotEnd,
+          firstName: state.firstName.trim(),
+          lastName: state.lastName.trim(),
+          phone: normalizedPhone,
+          address: state.serviceAddress,
+          notes: state.notes.trim(),
+          tiktokPromo: state.tiktokPromo === true,
+        })
+      );
+
       window.location.href = data.url;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Checkout failed');
@@ -234,22 +262,12 @@ export function BookingWizard({
   };
 
   if (confirmed) {
-    const isDeposit = confirmedPaymentMode === 'deposit';
     return (
-      <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-8 text-center">
-        <h2 className="text-2xl font-bold text-emerald-300">Booking confirmed!</h2>
-        <p className="mt-2 text-emerald-200/90">
-          {isDeposit
-            ? 'Your deposit has been received. We will collect the remaining balance on the day of your appointment.'
-            : 'Payment received in full. Your appointment has been scheduled — we will see you soon.'}
-        </p>
-        <a
-          href="/"
-          className="mt-6 inline-block font-semibold text-red-500 hover:text-red-400"
-        >
-          Back to home
-        </a>
-      </div>
+      <BookingConfirmedStep
+        paymentMode={confirmedPaymentMode}
+        initialSnapshot={initialConfirmation}
+        squareOrderId={squareOrderId}
+      />
     );
   }
 
