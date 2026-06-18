@@ -4,7 +4,7 @@ Instant booking website for a mobile car detailing service. Built with Astro (SS
 
 ## Stack
 
-- **Astro 6** — SSR mode with `@astrojs/vercel`
+- **Astro 6** — SSR mode with `@astrojs/node` (cPanel / Node hosting)
 - **React** — Multi-step booking wizard at `/book`
 - **Tailwind CSS v4**
 - **Square** — Payment Links checkout
@@ -32,7 +32,7 @@ npm run dev
 | `PUBLIC_GA_MEASUREMENT_ID` | GA4 measurement ID (default `G-ZGDPN87L22`; loaded on all pages via Layout) |
 | `RESEND_API_KEY` | Resend API key for booking emails |
 | `RESEND_FROM_EMAIL` | From address, e.g. `DriveClean <services@drivecleanli.com>` |
-| `CRON_SECRET` | Bearer token for `/api/email-reminders` (see cron setup below) |
+| `CRON_SECRET` | Bearer token for `/api/email-reminders` (cPanel cron — see deploy guide) |
 | `PUBLIC_GOOGLE_MAPS_API_KEY` | Browser key for address autocomplete |
 
 ### Google Calendar
@@ -45,12 +45,14 @@ npm run dev
 
 Point Square webhooks to `POST /api/webhook` for `payment.updated` (and optionally `order.updated`). Metadata on the order is used to create the calendar event and send a Resend confirmation email after payment.
 
-### Email reminders (Resend + Vercel Cron)
+### Email reminders (Resend + cPanel cron)
 
-Set `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, and `CRON_SECRET`. Vercel Cron runs once daily (9:00 AM Eastern, `0 14 * * *` UTC) and calls `GET /api/email-reminders` with `Authorization: Bearer <CRON_SECRET>` to send:
+Set `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, and `CRON_SECRET`. A **daily cPanel cron job** calls `GET /api/email-reminders` with `Authorization: Bearer <CRON_SECRET>` to send:
 
 - **Day-before reminder** — appointments scheduled for the next calendar day (America/New_York)
 - **TikTok post-visit reminder** — promo bookings whose appointment ended the previous calendar day
+
+See [`docs/hosting.com-cpanel.md`](docs/hosting.com-cpanel.md) for the exact cron command.
 
 Confirmation email on payment still works via webhook and does not depend on cron.
 
@@ -69,12 +71,12 @@ Confirmation email on payment still works via webhook and does not depend on cro
 | `GET /api/availability?date=&serviceId=` | Open time slots |
 | `POST /api/checkout` | Create Square Payment Link |
 | `POST /api/webhook` | Square webhook → Google Calendar event + confirmation email |
-| `GET /api/email-reminders` | Cron: day-before reminder + TikTok post-visit emails (Bearer `CRON_SECRET`) |
+| `GET /api/email-reminders` | Daily cron: day-before reminder + TikTok post-visit (Bearer `CRON_SECRET`) |
 | `GET /api/calendar-health` | Verify calendar read/write access |
 | `POST /api/calendar-sync` | Re-create calendar event from Square `orderId` |
 
 ## Deploy
 
-Deploy to Vercel. Set all environment variables in the project settings. The Vercel adapter is preconfigured in `astro.config.mjs`.
+**Production:** [hosting.com cPanel Node.js guide](docs/hosting.com-cpanel.md) — clone repo, `npm install`, `npm run build`, startup file `dist/server/entry.mjs`, Node **22**.
 
-For a quick DNS cutover placeholder, use the standalone static page in [`coming-soon/index.html`](coming-soon/index.html) — upload it to any host and rename to `index.html`.
+For a quick DNS cutover placeholder, use the standalone static page in [`coming-soon/index.html`](coming-soon/index.html).
