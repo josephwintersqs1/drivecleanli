@@ -53,6 +53,20 @@ export function validateNotes(notes: string): boolean {
   return notes.length <= NOTES_MAX_LENGTH;
 }
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export function validateEmail(email: string): boolean {
+  const trimmed = email.trim();
+  if (!trimmed || trimmed.length > 254) return false;
+  return EMAIL_PATTERN.test(trimmed);
+}
+
+export function normalizeEmail(email: string): string | null {
+  const trimmed = email.trim().toLowerCase();
+  if (!validateEmail(trimmed)) return null;
+  return trimmed;
+}
+
 export function truncateForMetadata(value: string, max = 255): string {
   return value.length <= max ? value : `${value.slice(0, max - 1)}…`;
 }

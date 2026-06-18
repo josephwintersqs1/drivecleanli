@@ -4,6 +4,7 @@ import BrandLogo from '../components/BrandLogo.astro';
 import Footer from '../components/Footer.astro';
 import PageTransition from '../components/PageTransition.astro';
 import SmoothAnchorScroll from '../components/SmoothAnchorScroll.astro';
+import GoogleAnalytics from '../components/GoogleAnalytics.astro';
 
 interface Props {
   title?: string;
@@ -39,6 +40,7 @@ const isDark = theme === 'dark';
     <meta name="description" content={description} />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
+    <GoogleAnalytics />
     {
       isDark && (
         <link rel="preconnect" href="https://fonts.googleapis.com" />

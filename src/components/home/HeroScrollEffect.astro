@@ -17,6 +17,7 @@
       hero.style.setProperty('--hero-drift', progress * 32 + 'px');
       hero.style.setProperty('--hero-scale', String(1 + progress * 0.06));
       hero.style.setProperty('--hero-scroll-hint', String(Math.max(0, 1 - progress * 3)));
+      hero.style.pointerEvents = fade < 0.05 ? 'none' : 'auto';
 
       ticking = false;
     }

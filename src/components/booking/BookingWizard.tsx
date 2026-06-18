@@ -6,7 +6,9 @@ import {
 } from '../../data/services';
 import {
   isValidServiceAddress,
+  normalizeEmail,
   normalizeUSPhone,
+  validateEmail,
   validateNotes,
   validateUSPhone,
 } from '../../lib/validate-contact';
@@ -110,6 +112,7 @@ export function BookingWizard({
           !!state.firstName.trim() &&
           !!state.lastName.trim() &&
           validateUSPhone(state.phone) &&
+          validateEmail(state.email) &&
           isValidServiceAddress(state.serviceAddress) &&
           validateNotes(state.notes)
         );
@@ -120,8 +123,9 @@ export function BookingWizard({
 
   const handleCheckout = async () => {
     const normalizedPhone = normalizeUSPhone(state.phone);
-    if (!normalizedPhone || !isValidServiceAddress(state.serviceAddress)) {
-      setError('Please complete all contact fields with a valid address and phone.');
+    const normalizedEmail = normalizeEmail(state.email);
+    if (!normalizedPhone || !normalizedEmail || !isValidServiceAddress(state.serviceAddress)) {
+      setError('Please complete all contact fields with a valid address, phone, and email.');
       return;
     }
 
@@ -141,6 +145,7 @@ export function BookingWizard({
           firstName: state.firstName.trim(),
           lastName: state.lastName.trim(),
           phone: normalizedPhone,
+          email: normalizedEmail,
           address: state.serviceAddress,
           notes: state.notes.trim(),
           tiktokPromo: state.tiktokPromo === true,
@@ -160,6 +165,7 @@ export function BookingWizard({
           firstName: state.firstName.trim(),
           lastName: state.lastName.trim(),
           phone: normalizedPhone,
+          email: normalizedEmail,
           address: state.serviceAddress,
           notes: state.notes.trim(),
           tiktokPromo: state.tiktokPromo === true,
@@ -234,6 +240,7 @@ export function BookingWizard({
             firstName={state.firstName}
             lastName={state.lastName}
             phone={state.phone}
+            email={state.email}
             serviceAddress={state.serviceAddress}
             notes={state.notes}
             showErrors={contactShowErrors}

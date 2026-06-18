@@ -1,6 +1,10 @@
 import type { APIRoute } from 'astro';
 import { expandSquareOrderMetadata } from '../../adapters/squareOrderMetadata';
-import { createBookingCalendarEvent, hasBookingMetadata } from '../../lib/booking-event';
+import {
+  createBookingCalendarEvent,
+  hasBookingMetadata,
+  sendBookingConfirmationIfNeeded,
+} from '../../lib/booking-event';
 import { getOrderBookingMetadata } from '../../lib/square';
 
 export const prerender = false;
@@ -95,12 +99,65 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    await createBookingCalendarEvent(metadata, paymentId);
+    let calendarError: string | undefined;
+    let emailResult: { sent: boolean; skipped?: string; error?: string } | undefined;
+    let eventId: string | undefined;
 
-    return new Response(JSON.stringify({ received: true, booked: true }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    try {
+      const created = await createBookingCalendarEvent(metadata, paymentId);
+      eventId = created.eventId;
+    } catch (err) {
+      calendarError = err instanceof Error ? err.message : 'Calendar create failed';
+      console.error('[webhook] calendar', calendarError);
+    }
+
+    if (eventId) {
+      try {
+        emailResult = await sendBookingConfirmationIfNeeded(metadata, eventId, paymentId);
+        if (emailResult.error) {
+          console.error('[webhook] confirmation email', emailResult.error);
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Confirmation email failed';
+        console.error('[webhook] confirmation email', message);
+        emailResult = { sent: false, error: message };
+      }
+    }
+
+    if (calendarError) {
+      const calendarPermission =
+        /writer access|forbidden|insufficient/i.test(calendarError);
+      const serviceAccount = import.meta.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+
+      return new Response(
+        JSON.stringify({
+          error: calendarError,
+          email: emailResult,
+          ...(calendarPermission && serviceAccount
+            ? {
+                hint: `Share GOOGLE_CALENDAR_ID with ${serviceAccount} using "Make changes to events", then POST /api/calendar-sync with the Square orderId to retry.`,
+              }
+            : {}),
+        }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    return new Response(
+      JSON.stringify({
+        received: true,
+        booked: true,
+        eventId,
+        email: emailResult,
+      }),
+      {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Webhook processing failed';
     console.error('[webhook]', message);

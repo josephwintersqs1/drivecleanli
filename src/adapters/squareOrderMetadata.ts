@@ -19,6 +19,7 @@ export function buildSquareOrderMetadata(
   const metadata: Record<string, string> = {
     slotStart: booking.slotStart,
     slotEnd: booking.slotEnd,
+    email: booking.email,
     customer: [booking.firstName, booking.lastName, booking.phone].join(DELIM),
     address: truncateForMetadata(booking.address.formatted),
     pricing: [

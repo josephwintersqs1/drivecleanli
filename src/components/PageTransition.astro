@@ -85,6 +85,7 @@
     requestAnimationFrame(() => {
       void animateOpacity(overlay, 0, FADE_OUT_MS).then(() => {
         overlay.style.visibility = 'hidden';
+        overlay.style.pointerEvents = 'none';
         document.documentElement.classList.remove('book-page-entering');
         document.documentElement.classList.add('book-page-entered');
       });

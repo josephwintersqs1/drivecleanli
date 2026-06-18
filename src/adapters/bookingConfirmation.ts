@@ -5,6 +5,7 @@ import { getBookingPriceSummary } from '../lib/tiktok-promo';
 export interface BookingConfirmationSnapshot {
   firstName: string;
   lastName: string;
+  email: string;
   serviceId: string;
   vehicleTierId: string;
   addOnIds: string[];
@@ -33,6 +34,7 @@ export function buildBookingConfirmationSnapshot(
   return {
     firstName: booking.firstName,
     lastName: booking.lastName,
+    email: booking.email,
     serviceId: booking.serviceId,
     vehicleTierId: booking.vehicleTierId,
     addOnIds: booking.addOnIds,
@@ -76,6 +78,7 @@ export function snapshotFromOrderMetadata(
   return {
     firstName: meta.firstName,
     lastName: meta.lastName ?? '',
+    email: meta.email ?? '',
     serviceId: meta.serviceId ?? '',
     vehicleTierId: meta.vehicleTierId ?? '',
     addOnIds: meta.addOnIds ? meta.addOnIds.split(',').filter(Boolean) : [],

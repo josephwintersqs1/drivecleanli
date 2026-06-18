@@ -1,10 +1,19 @@
-import { createCalendarEvent } from './google';
+import {
+  createCalendarEvent,
+  findCalendarEventByPaymentId,
+  getCalendarEventById,
+  patchCalendarEventExtendedProperties,
+} from './google';
 import {
   formatPrice,
   getAddOnById,
   getServiceById,
   getVehicleTierLabel,
 } from '../data/services';
+import {
+  buildBookingEmailDetails,
+  sendBookingConfirmationEmail,
+} from './email';
 
 export function hasBookingMetadata(
   metadata: Record<string, string> | null | undefined
@@ -15,7 +24,7 @@ export function hasBookingMetadata(
 export async function createBookingCalendarEvent(
   metadata: Record<string, string>,
   paymentId?: string
-): Promise<string> {
+): Promise<{ eventId: string }> {
   const service = getServiceById(metadata.serviceId ?? '');
   const vehicleLabel =
     metadata.vehicleLabel ??
@@ -60,10 +69,9 @@ export async function createBookingCalendarEvent(
   const description = [
     `Customer: ${customerName}`,
     `Phone: ${metadata.phone ?? 'N/A'}`,
+    `Email: ${metadata.email ?? 'N/A'}`,
     `Address: ${addressLine}`,
-    tiktokPromo
-      ? 'TikTok promo: 10% off — send post-appointment share reminder email'
-      : null,
+    tiktokPromo ? 'TikTok promo: 10% off applied' : null,
     notes ? `Notes: ${notes}` : null,
     `Service: ${service?.name ?? metadata.serviceId}`,
     vehicleLabel !== 'Standard' ? `Vehicle: ${vehicleLabel}` : null,
@@ -74,12 +82,49 @@ export async function createBookingCalendarEvent(
     .filter(Boolean)
     .join('\n');
 
-  return createCalendarEvent({
+  const eventId = await createCalendarEvent({
     summary: `DriveClean – ${service?.name ?? 'Detail'} (${customerName})`,
     description,
     start: metadata.slotStart,
     end: metadata.slotEnd,
     location: metadata.address ?? addressLine,
     paymentId,
+    customerEmail: metadata.email,
+    tiktokPromo,
   });
+
+  if (eventId === 'duplicate' && paymentId) {
+    const existing = await findCalendarEventByPaymentId(paymentId);
+    if (!existing) {
+      throw new Error('Duplicate calendar event could not be resolved');
+    }
+    return { eventId: existing.id };
+  }
+
+  return { eventId };
+}
+
+/** Sends confirmation email once per booking; updates calendar flag on success. */
+export async function sendBookingConfirmationIfNeeded(
+  metadata: Record<string, string>,
+  eventId: string,
+  paymentId?: string
+): Promise<{ sent: boolean; skipped?: string; error?: string }> {
+  const event = await getCalendarEventById(eventId);
+  if (event?.extendedProperties.confirmationSent === '1') {
+    return { sent: false, skipped: 'already_sent' };
+  }
+
+  if (!buildBookingEmailDetails(metadata)) {
+    return { sent: false, skipped: 'no_email' };
+  }
+
+  try {
+    await sendBookingConfirmationEmail(metadata, paymentId);
+    await patchCalendarEventExtendedProperties(eventId, { confirmationSent: '1' });
+    return { sent: true };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Confirmation email failed';
+    return { sent: false, error: message };
+  }
 }

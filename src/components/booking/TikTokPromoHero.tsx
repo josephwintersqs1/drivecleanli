@@ -38,11 +38,12 @@ export function TikTokPromoHero({ celebrate = false }: TikTokPromoHeroProps) {
 
         <p className="mt-5 max-w-md text-sm leading-relaxed text-white/55">
           Love your detail? Share a short clip after your appointment and we&apos;ll take{' '}
-          {TIKTOK_PROMO_PERCENT}% off today. We&apos;ll email you a friendly reminder after your visit.
+          {TIKTOK_PROMO_PERCENT}% off today. About an hour after your visit, we&apos;ll email you a
+          friendly reminder to post.
         </p>
 
         <p className="mt-4 text-sm text-white/50">
-          Tag <span className="font-semibold text-white/85">@drivecleanli</span> — no posting
+          Tag <span className="font-semibold text-white/85">@drive.clean.li</span> — no posting
           required before you book.
         </p>
       </div>

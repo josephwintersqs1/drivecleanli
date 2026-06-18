@@ -1,5 +1,9 @@
 import type { APIRoute } from 'astro';
-import { createBookingCalendarEvent, hasBookingMetadata } from '../../lib/booking-event';
+import {
+  createBookingCalendarEvent,
+  hasBookingMetadata,
+  sendBookingConfirmationIfNeeded,
+} from '../../lib/booking-event';
 import { getOrderBookingMetadata } from '../../lib/square';
 
 export const prerender = false;
@@ -30,8 +34,10 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    const eventId = await createBookingCalendarEvent(metadata);
-    return new Response(JSON.stringify({ ok: true, eventId, orderId }), {
+    const { eventId } = await createBookingCalendarEvent(metadata, orderId);
+    const email = await sendBookingConfirmationIfNeeded(metadata, eventId);
+
+    return new Response(JSON.stringify({ ok: true, eventId, orderId, email }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });

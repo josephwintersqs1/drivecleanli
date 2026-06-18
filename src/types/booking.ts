@@ -11,6 +11,7 @@ export interface BookingPayload {
   firstName: string;
   lastName: string;
   phone: string;
+  email: string;
   /** E.164 format, e.g. +16317645337 */
   address: ServiceAddress;
   notes: string;
@@ -29,6 +30,7 @@ export interface BookingState {
   firstName: string;
   lastName: string;
   phone: string;
+  email: string;
   serviceAddress: ServiceAddress | null;
   notes: string;
   /** null until user answers the promo step */
@@ -46,6 +48,7 @@ export const initialBookingState: BookingState = {
   firstName: '',
   lastName: '',
   phone: '',
+  email: '',
   serviceAddress: null,
   notes: '',
   tiktokPromo: null,

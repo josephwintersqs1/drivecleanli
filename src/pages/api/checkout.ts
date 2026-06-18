@@ -9,7 +9,9 @@ import {
 } from '../../data/services';
 import {
   isValidServiceAddress,
+  normalizeEmail,
   normalizeUSPhone,
+  validateEmail,
   validateNotes,
   validateUSPhone,
 } from '../../lib/validate-contact';
@@ -63,6 +65,10 @@ function isValidBooking(body: unknown): body is BookingPayload {
     return false;
   }
 
+  if (typeof b.email !== 'string' || !validateEmail(b.email)) {
+    return false;
+  }
+
   const normalized = normalizeUSPhone(b.phone);
   if (!normalized) return false;
 
@@ -109,6 +115,7 @@ export const POST: APIRoute = async ({ request }) => {
     !body.firstName.trim() ||
     !body.lastName.trim() ||
     !body.phone.trim() ||
+    !body.email.trim() ||
     !body.address.formatted.trim()
   ) {
     return new Response(JSON.stringify({ error: 'Contact fields are required' }), {
@@ -125,11 +132,20 @@ export const POST: APIRoute = async ({ request }) => {
     });
   }
 
+  const normalizedEmail = normalizeEmail(body.email);
+  if (!normalizedEmail) {
+    return new Response(JSON.stringify({ error: 'Invalid email address' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
   const payload: BookingPayload = {
     ...body,
     firstName: body.firstName.trim(),
     lastName: body.lastName.trim(),
     phone: normalizedPhone,
+    email: normalizedEmail,
     notes: body.notes.trim(),
   };
 

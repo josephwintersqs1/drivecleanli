@@ -79,6 +79,7 @@ export function ReviewStep({
           value={`${state.firstName} ${state.lastName} · ${formatUSPhoneDisplay(state.phone)}`}
           alignRight
         />
+        <Row label="Email" value={state.email.trim() || '—'} alignRight />
         {state.notes.trim() && (
           <Row label="Notes" value={state.notes.trim()} alignRight />
         )}

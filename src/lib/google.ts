@@ -146,18 +146,149 @@ export interface BookingEventDetails {
   location: string;
   /** Prevents duplicate events when Square retries the webhook. */
   paymentId?: string;
+  customerEmail?: string;
+  tiktokPromo?: boolean;
+}
+
+export interface CalendarEventRecord {
+  id: string;
+  start: string;
+  end: string;
+  extendedProperties: Record<string, string>;
+}
+
+export type CalendarEmailFlags = {
+  paymentId?: string;
+  customerEmail?: string;
+  tiktokPromo?: '0' | '1';
+  confirmationSent?: '0' | '1';
+  reminder1hSent?: '0' | '1';
+  tiktokPostSent?: '0' | '1';
+};
+
+function buildExtendedProperties(
+  details: BookingEventDetails
+): CalendarEmailFlags {
+  return {
+    paymentId: details.paymentId ?? '',
+    customerEmail: details.customerEmail ?? '',
+    tiktokPromo: details.tiktokPromo ? '1' : '0',
+    confirmationSent: '0',
+    reminder1hSent: '0',
+    tiktokPostSent: '0',
+  };
+}
+
+function parseExtendedProperties(
+  raw: Record<string, string> | null | undefined
+): Record<string, string> {
+  if (!raw) return {};
+  return { ...raw };
+}
+
+function getCalendarClient() {
+  const calendarId = import.meta.env.GOOGLE_CALENDAR_ID;
+  if (!calendarId) {
+    throw new Error('GOOGLE_CALENDAR_ID is not configured');
+  }
+  const auth = getAuth();
+  return {
+    calendarId,
+    calendar: google.calendar({ version: 'v3', auth }),
+  };
+}
+
+export async function getCalendarEventById(
+  eventId: string
+): Promise<CalendarEventRecord | null> {
+  const { calendarId, calendar } = getCalendarClient();
+
+  const response = await calendar.events.get({ calendarId, eventId });
+  if (!response.data.start?.dateTime || !response.data.end?.dateTime) return null;
+
+  return {
+    id: eventId,
+    start: new Date(response.data.start.dateTime).toISOString(),
+    end: new Date(response.data.end.dateTime).toISOString(),
+    extendedProperties: parseExtendedProperties(response.data.extendedProperties?.private),
+  };
+}
+
+export async function findCalendarEventByPaymentId(
+  paymentId: string
+): Promise<CalendarEventRecord | null> {
+  const { calendarId, calendar } = getCalendarClient();
+  const iCalUID = `driveclean-${paymentId}@drivecleanli.com`;
+
+  const response = await calendar.events.list({
+    calendarId,
+    iCalUID,
+    maxResults: 1,
+  });
+
+  const event = response.data.items?.[0];
+  if (!event?.id || !event.start?.dateTime || !event.end?.dateTime) return null;
+
+  return {
+    id: event.id,
+    start: new Date(event.start.dateTime).toISOString(),
+    end: new Date(event.end.dateTime).toISOString(),
+    extendedProperties: parseExtendedProperties(event.extendedProperties?.private),
+  };
+}
+
+export async function listCalendarEvents(
+  timeMin: string,
+  timeMax: string
+): Promise<CalendarEventRecord[]> {
+  const { calendarId, calendar } = getCalendarClient();
+
+  const response = await calendar.events.list({
+    calendarId,
+    timeMin,
+    timeMax,
+    singleEvents: true,
+    orderBy: 'startTime',
+    maxResults: 100,
+  });
+
+  return (response.data.items ?? [])
+    .filter((event) => event.id && event.start?.dateTime && event.end?.dateTime)
+    .map((event) => ({
+      id: event.id!,
+      start: new Date(event.start!.dateTime!).toISOString(),
+      end: new Date(event.end!.dateTime!).toISOString(),
+      extendedProperties: parseExtendedProperties(event.extendedProperties?.private),
+    }));
+}
+
+export async function patchCalendarEventExtendedProperties(
+  eventId: string,
+  patch: Partial<CalendarEmailFlags>
+): Promise<void> {
+  const { calendarId, calendar } = getCalendarClient();
+
+  const existing = await calendar.events.get({ calendarId, eventId });
+  const current = parseExtendedProperties(existing.data.extendedProperties?.private);
+
+  await calendar.events.patch({
+    calendarId,
+    eventId,
+    requestBody: {
+      extendedProperties: {
+        private: {
+          ...current,
+          ...patch,
+        },
+      },
+    },
+  });
 }
 
 export async function createCalendarEvent(
   details: BookingEventDetails
 ): Promise<string> {
-  const calendarId = import.meta.env.GOOGLE_CALENDAR_ID;
-  if (!calendarId) {
-    throw new Error('GOOGLE_CALENDAR_ID is not configured');
-  }
-
-  const auth = getAuth();
-  const calendar = google.calendar({ version: 'v3', auth });
+  const { calendarId, calendar } = getCalendarClient();
 
   try {
     const event = await calendar.events.insert({
@@ -169,6 +300,9 @@ export async function createCalendarEvent(
         iCalUID: details.paymentId
           ? `driveclean-${details.paymentId}@drivecleanli.com`
           : undefined,
+        extendedProperties: {
+          private: buildExtendedProperties(details),
+        },
         start: {
           dateTime: toCalendarDateTime(details.start),
           timeZone: CALENDAR_TIMEZONE,

@@ -1,0 +1,33 @@
+---
+/**
+ * Site-wide Google Analytics (GA4) via gtag.js.
+ * Included from Layout.astro so every page is tracked automatically.
+ * Set PUBLIC_GA_MEASUREMENT_ID in env to enable (or override the default).
+ */
+const measurementId =
+  import.meta.env.PUBLIC_GA_MEASUREMENT_ID?.trim() || 'G-ZGDPN87L22';
+---
+
+{
+  measurementId && (
+    <>
+      <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin />
+      <script
+        async
+        src={`https://www.googletagmanager.com/gtag/js?id=${measurementId}`}
+      />
+      <script is:inline define:vars={{ measurementId }}>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() {
+          dataLayer.push(arguments);
+        }
+        window.gtag = gtag;
+        gtag('js', new Date());
+        gtag('config', measurementId, {
+          send_page_view: true,
+          page_path: window.location.pathname + window.location.search,
+        });
+      </script>
+    </>
+  )
+}

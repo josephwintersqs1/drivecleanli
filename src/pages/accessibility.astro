@@ -1,13 +1,85 @@
 ---
 import Layout from '../layouts/Layout.astro';
+
+const lastUpdated = 'June 16, 2026';
 ---
 
-<Layout title="Accessibility | DriveClean LI">
-  <section class="mx-auto max-w-3xl px-4 py-16">
-    <h1 class="text-3xl font-bold text-slate-900">Accessibility</h1>
-    <p class="mt-4 text-slate-600">
-      This page is being prepared. Check back soon for our accessibility statement.
-    </p>
-    <a href="/" class="mt-8 inline-block text-sky-600 hover:underline">← Back to home</a>
+<Layout
+  title="Accessibility | DriveClean LI"
+  description="DriveClean LI accessibility statement and how to request assistance."
+>
+  <section class="mx-auto max-w-3xl px-4 py-16 sm:py-20">
+    <p class="text-sm font-medium text-red-600">Legal</p>
+    <h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+      Accessibility Statement
+    </h1>
+    <p class="mt-3 text-sm text-slate-500">Last updated: {lastUpdated}</p>
+
+    <div class="prose-policy mt-10 space-y-8 text-slate-700">
+      <section>
+        <h2 class="text-lg font-semibold text-slate-900">Our commitment</h2>
+        <p class="mt-3 leading-relaxed">
+          DriveClean Mobile Detailing is committed to making drivecleanli.com accessible to as many
+          people as possible. We aim to follow widely recognized accessibility practices, including
+          the Web Content Accessibility Guidelines (WCAG) 2.1 Level AA where practical.
+        </p>
+      </section>
+
+      <section>
+        <h2 class="text-lg font-semibold text-slate-900">Measures we take</h2>
+        <ul class="mt-3 list-disc space-y-2 pl-5 leading-relaxed">
+          <li>Semantic HTML structure for headings, landmarks, and forms</li>
+          <li>Keyboard-accessible navigation and interactive controls where possible</li>
+          <li>Visible focus states and sufficient color contrast on primary content</li>
+          <li>Text alternatives for meaningful images and icons</li>
+          <li>Form labels, error messages, and instructions on the booking flow</li>
+          <li>Support for reduced-motion preferences in animations</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 class="text-lg font-semibold text-slate-900">Booking assistance</h2>
+        <p class="mt-3 leading-relaxed">
+          If you have difficulty completing a booking online, we are happy to help you schedule by
+          phone or email. We can walk you through service options, availability, and payment.
+        </p>
+      </section>
+
+      <section>
+        <h2 class="text-lg font-semibold text-slate-900">Known limitations</h2>
+        <p class="mt-3 leading-relaxed">
+          Some third-party tools used on our site — including payment checkout (Square) and address
+          autocomplete (Google) — are controlled by external providers and may not fully meet the
+          same accessibility standards as our own pages. We continue to review our booking
+          experience and welcome feedback on areas that need improvement.
+        </p>
+      </section>
+
+      <section>
+        <h2 class="text-lg font-semibold text-slate-900">Feedback</h2>
+        <p class="mt-3 leading-relaxed">
+          If you encounter a barrier on our website or have suggestions for improvement, please
+          contact us. We will do our best to respond promptly and work toward a reasonable
+          accommodation or fix.
+        </p>
+        <ul class="mt-3 space-y-2 leading-relaxed">
+          <li>
+            Email:
+            <a href="mailto:services@drivecleanli.com" class="text-red-600 hover:underline">
+              services@drivecleanli.com
+            </a>
+          </li>
+          <li>
+            Phone:
+            <a href="tel:+16317645337" class="text-red-600 hover:underline">(631) 764-5337</a>
+          </li>
+        </ul>
+      </section>
+    </div>
+
+    <nav class="mt-12 flex flex-wrap gap-6 text-sm font-medium" aria-label="Related pages">
+      <a href="/privacy" class="text-red-600 hover:underline">Privacy Policy</a>
+      <a href="/" class="text-red-600 hover:underline">← Back to home</a>
+    </nav>
   </section>
 </Layout>

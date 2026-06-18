@@ -95,7 +95,7 @@ export function BookingConfirmedStep({
         </h2>
         <p className="booking-confirmed__lead">
           {snapshot
-            ? `We've locked in your appointment${isDeposit ? ' with your deposit on file' : ' and received payment in full'}. We'll see you then.`
+            ? `We've locked in your appointment${isDeposit ? ' with your deposit on file' : ' and received payment in full'}. A confirmation email is on its way — we'll see you then.`
             : isDeposit
               ? 'Your deposit has been received. We will see you on your appointment day.'
               : 'Payment received in full. We will see you on your appointment day.'}
@@ -160,7 +160,7 @@ export function BookingConfirmedStep({
               <TimelineStep
                 step={2}
                 title="Reminder before we arrive"
-                body="Our system will email you 30 minutes before we arrive so you don't forget — no need to watch the clock."
+                body="Our system will email you 1 hour before we arrive so you don't forget — no need to watch the clock."
               />
               <TimelineStep
                 step={3}
