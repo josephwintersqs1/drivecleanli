@@ -30,7 +30,7 @@ Point DNS at hosting.com (A record `@` → server IP, CNAME `www` → your host)
 | Application mode | **Production** |
 | Application root | `drivecleanli` |
 | Application URL | `drivecleanli.com` |
-| Application startup file | `dist/server/entry.mjs` |
+| Application startup file | `passenger.mjs` |
 
 Leave the app created but not started until after build (step 4).
 
@@ -49,6 +49,7 @@ In the Node.js app editor, add every variable from `.env.example`:
 | `RESEND_API_KEY` | Resend dashboard |
 | `RESEND_FROM_EMAIL` | `DriveClean <services@drivecleanli.com>` |
 | `CRON_SECRET` | Random string (`openssl rand -hex 32`) |
+| `ASTRO_NODE_AUTOSTART` | `disabled` (required for cPanel Passenger) |
 | `PUBLIC_GA_MEASUREMENT_ID` | `G-ZGDPN87L22` |
 | `PUBLIC_GOOGLE_MAPS_API_KEY` | Browser Maps/Places key |
 
@@ -101,7 +102,7 @@ Then **Restart** the Node.js app in cPanel.
 
 | Problem | Fix |
 |---------|-----|
-| 503 / app not running | Check startup file is `dist/server/entry.mjs` and `npm run build` succeeded |
+| 503 / app not running | Startup file must be `passenger.mjs`, env `ASTRO_NODE_AUTOSTART=disabled`, and `dist/` uploaded |
 | Payment redirect wrong | `SITE_URL` must match live domain |
 | No calendar/email | Square webhook URL + env vars |
 | Cron 401 | `CRON_SECRET` in env must match curl header |
