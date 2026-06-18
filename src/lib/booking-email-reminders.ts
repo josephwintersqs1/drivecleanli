@@ -1,17 +1,22 @@
 import { expandSquareOrderMetadata } from '../adapters/squareOrderMetadata';
 import { buildBookingEmailDetails } from '../adapters/bookingEmail';
 import {
-  getCalendarEventById,
+  addCalendarDays,
+  getDateKeyInTimezone,
+} from './format-booking-slot';
+import {
+  CALENDAR_TIMEZONE,
   listCalendarEvents,
   patchCalendarEventExtendedProperties,
 } from './google';
 import {
-  sendOneHourReminderEmail,
+  sendDayBeforeReminderEmail,
   sendTiktokPostVisitEmail,
 } from './email';
 import { getOrderBookingMetadata } from './square';
 
-const MS_MINUTE = 60 * 1000;
+const MS_HOUR = 60 * 60 * 1000;
+const LOOKBACK_HOURS = 48;
 
 async function resolveMetadataForEvent(
   paymentId: string | undefined,
@@ -27,9 +32,8 @@ async function resolveMetadataForEvent(
   return null;
 }
 
-function isInWindow(iso: string, minMs: number, maxMs: number, now: number): boolean {
-  const target = new Date(iso).getTime();
-  return target >= now + minMs && target <= now + maxMs;
+function reminderAlreadySent(props: Record<string, string>): boolean {
+  return props.reminderDayBeforeSent === '1' || props.reminder1hSent === '1';
 }
 
 export async function processScheduledBookingEmails(): Promise<{
@@ -42,15 +46,21 @@ export async function processScheduledBookingEmails(): Promise<{
   let remindersSent = 0;
   let tiktokSent = 0;
 
+  const todayKey = getDateKeyInTimezone(new Date(now).toISOString(), CALENDAR_TIMEZONE);
+  const tomorrowKey = addCalendarDays(todayKey, 1);
+  const yesterdayKey = addCalendarDays(todayKey, -1);
+
   const upcoming = await listCalendarEvents(
     new Date(now).toISOString(),
-    new Date(now + 2 * 60 * MS_MINUTE).toISOString()
+    new Date(now + LOOKBACK_HOURS * MS_HOUR).toISOString()
   );
 
   for (const event of upcoming) {
     const props = event.extendedProperties;
-    if (props.reminder1hSent === '1') continue;
-    if (!isInWindow(event.start, 50 * MS_MINUTE, 70 * MS_MINUTE, now)) continue;
+    if (reminderAlreadySent(props)) continue;
+
+    const startDateKey = getDateKeyInTimezone(event.start, CALENDAR_TIMEZONE);
+    if (startDateKey !== tomorrowKey) continue;
 
     const paymentId = props.paymentId?.trim();
     const metadata = await resolveMetadataForEvent(paymentId, props.customerEmail);
@@ -67,8 +77,10 @@ export async function processScheduledBookingEmails(): Promise<{
     if (!details) continue;
 
     try {
-      await sendOneHourReminderEmail(details, event.id);
-      await patchCalendarEventExtendedProperties(event.id, { reminder1hSent: '1' });
+      await sendDayBeforeReminderEmail(details, event.id);
+      await patchCalendarEventExtendedProperties(event.id, {
+        reminderDayBeforeSent: '1',
+      });
       remindersSent += 1;
     } catch (err) {
       errors.push(
@@ -78,7 +90,7 @@ export async function processScheduledBookingEmails(): Promise<{
   }
 
   const recent = await listCalendarEvents(
-    new Date(now - 2 * 60 * MS_MINUTE).toISOString(),
+    new Date(now - LOOKBACK_HOURS * MS_HOUR).toISOString(),
     new Date(now).toISOString()
   );
 
@@ -86,7 +98,9 @@ export async function processScheduledBookingEmails(): Promise<{
     const props = event.extendedProperties;
     if (props.tiktokPromo !== '1') continue;
     if (props.tiktokPostSent === '1') continue;
-    if (!isInWindow(event.end, -70 * MS_MINUTE, -50 * MS_MINUTE, now)) continue;
+
+    const endDateKey = getDateKeyInTimezone(event.end, CALENDAR_TIMEZONE);
+    if (endDateKey !== yesterdayKey) continue;
 
     const paymentId = props.paymentId?.trim();
     const metadata = await resolveMetadataForEvent(paymentId, props.customerEmail);

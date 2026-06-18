@@ -38,7 +38,7 @@ export function TikTokPromoHero({ celebrate = false }: TikTokPromoHeroProps) {
 
         <p className="mt-5 max-w-md text-sm leading-relaxed text-white/55">
           Love your detail? Share a short clip after your appointment and we&apos;ll take{' '}
-          {TIKTOK_PROMO_PERCENT}% off today. About an hour after your visit, we&apos;ll email you a
+          {TIKTOK_PROMO_PERCENT}% off today. The day after your visit, we&apos;ll email you a
           friendly reminder to post.
         </p>
 

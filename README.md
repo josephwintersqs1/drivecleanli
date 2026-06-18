@@ -32,7 +32,7 @@ npm run dev
 | `PUBLIC_GA_MEASUREMENT_ID` | GA4 measurement ID (default `G-ZGDPN87L22`; loaded on all pages via Layout) |
 | `RESEND_API_KEY` | Resend API key for booking emails |
 | `RESEND_FROM_EMAIL` | From address, e.g. `DriveClean <services@drivecleanli.com>` |
-| `CRON_SECRET` | Bearer token for `/api/email-reminders` (Vercel Cron) |
+| `CRON_SECRET` | Bearer token for `/api/email-reminders` (see cron setup below) |
 | `PUBLIC_GOOGLE_MAPS_API_KEY` | Browser key for address autocomplete |
 
 ### Google Calendar
@@ -47,10 +47,12 @@ Point Square webhooks to `POST /api/webhook` for `payment.updated` (and optional
 
 ### Email reminders (Resend + Vercel Cron)
 
-Set `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, and `CRON_SECRET`. Vercel Cron hits `/api/email-reminders` every 15 minutes to send:
+Set `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, and `CRON_SECRET`. Vercel Cron runs once daily (9:00 AM Eastern, `0 14 * * *` UTC) and calls `GET /api/email-reminders` with `Authorization: Bearer <CRON_SECRET>` to send:
 
-- **1-hour pre-arrival reminder** (50–70 min before appointment)
-- **TikTok post-visit reminder** (50–70 min after appointment end, promo bookings only)
+- **Day-before reminder** — appointments scheduled for the next calendar day (America/New_York)
+- **TikTok post-visit reminder** — promo bookings whose appointment ended the previous calendar day
+
+Confirmation email on payment still works via webhook and does not depend on cron.
 
 ## Scripts
 
@@ -67,7 +69,7 @@ Set `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, and `CRON_SECRET`. Vercel Cron hits `
 | `GET /api/availability?date=&serviceId=` | Open time slots |
 | `POST /api/checkout` | Create Square Payment Link |
 | `POST /api/webhook` | Square webhook → Google Calendar event + confirmation email |
-| `GET /api/email-reminders` | Cron: 1-hour reminder + TikTok post-visit emails (Bearer `CRON_SECRET`) |
+| `GET /api/email-reminders` | Cron: day-before reminder + TikTok post-visit emails (Bearer `CRON_SECRET`) |
 | `GET /api/calendar-health` | Verify calendar read/write access |
 | `POST /api/calendar-sync` | Re-create calendar event from Square `orderId` |
 

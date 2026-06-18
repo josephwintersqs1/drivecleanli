@@ -2,7 +2,7 @@ import { Resend } from 'resend';
 import {
   buildBookingEmailDetails,
   buildConfirmationEmailContent,
-  buildOneHourReminderEmailContent,
+  buildDayBeforeReminderEmailContent,
   buildTiktokPostVisitEmailContent,
   type BookingEmailDetails,
 } from '../adapters/bookingEmail';
@@ -58,12 +58,12 @@ export async function sendBookingConfirmationEmail(
   return true;
 }
 
-export async function sendOneHourReminderEmail(
+export async function sendDayBeforeReminderEmail(
   details: BookingEmailDetails,
   eventId: string
 ): Promise<void> {
-  const content = buildOneHourReminderEmailContent(details);
-  await sendEmail(details, content, `reminder-1h-${eventId}`);
+  const content = buildDayBeforeReminderEmailContent(details);
+  await sendEmail(details, content, `reminder-day-before-${eventId}`);
 }
 
 export async function sendTiktokPostVisitEmail(

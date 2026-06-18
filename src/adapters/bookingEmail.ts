@@ -125,7 +125,7 @@ export function buildConfirmationEmailContent(details: BookingEmailDetails): {
     `Location: ${details.address}`,
     `Payment: ${details.paymentSummary}`,
     '',
-    'We will email you a reminder 1 hour before we arrive.',
+    'We will email you a reminder the day before your appointment.',
     '',
     '— DriveClean Mobile Detailing',
   ].join('\n');
@@ -138,45 +138,44 @@ export function buildConfirmationEmailContent(details: BookingEmailDetails): {
      </p>
      ${detailsBlock(details)}
      <p style="margin:20px 0 0;line-height:1.6;color:#a7f3d0;">
-       We will send a reminder 1 hour before your arrival window.
+       We will send a reminder about 24 hours before your arrival window.
      </p>`
   );
 
   return { subject, html, text };
 }
 
-export function buildOneHourReminderEmailContent(details: BookingEmailDetails): {
+export function buildDayBeforeReminderEmailContent(details: BookingEmailDetails): {
   subject: string;
   html: string;
   text: string;
 } {
   const name = details.firstName || 'there';
-  const subject = `Reminder: DriveClean arrives in 1 hour`;
+  const dateLabel = formatBookingDate(details.slotStart);
   const window = formatBookingTimeRange(details.slotStart, details.slotEnd);
+  const subject = `Reminder: DriveClean tomorrow — ${dateLabel}`;
 
   const text = [
     `Hi ${name},`,
     '',
-    'Friendly reminder — DriveClean will arrive in about 1 hour.',
+    'Friendly reminder — your DriveClean appointment is tomorrow.',
     '',
+    `Date: ${dateLabel}`,
     `Arrival window: ${window}`,
     `Location: ${details.address}`,
     '',
-    'Please ensure we have access to your vehicle. See you soon!',
+    'Please ensure we have access to your vehicle. We look forward to seeing you!',
     '',
     '— DriveClean Mobile Detailing',
   ].join('\n');
 
   const html = emailShell(
     subject,
-    `<h1 style="margin:0;font-size:24px;color:#fbbf24;">See you in 1 hour, ${name}</h1>
+    `<h1 style="margin:0;font-size:24px;color:#fbbf24;">See you tomorrow, ${name}</h1>
      <p style="margin:16px 0 0;line-height:1.6;color:#d4d4d4;">
-       This is your reminder that DriveClean will arrive during your scheduled window today.
+       This is your reminder that DriveClean will arrive during your scheduled window tomorrow.
      </p>
-     <p style="margin:16px 0 0;line-height:1.6;color:#d4d4d4;">
-       <strong>Arrival window:</strong> ${window}<br>
-       <strong>Location:</strong> ${details.address}
-     </p>
+     ${detailsBlock(details)}
      <p style="margin:20px 0 0;line-height:1.6;color:#a7f3d0;">
        Please make sure we can access your vehicle. We are looking forward to it!
      </p>`
@@ -195,7 +194,7 @@ export function buildTiktokPostVisitEmailContent(details: BookingEmailDetails): 
   const text = [
     `Hi ${name},`,
     '',
-    'Hope your vehicle is looking great after today\'s detail!',
+    'Hope your vehicle is looking great after your recent detail!',
     '',
     'You opted into our TikTok promo — when you share your experience, tag @drive.clean.li so we can say thanks.',
     '',
@@ -208,7 +207,7 @@ export function buildTiktokPostVisitEmailContent(details: BookingEmailDetails): 
     subject,
     `<h1 style="margin:0;font-size:24px;color:#6ee7b7;">Thanks for riding with us, ${name}!</h1>
      <p style="margin:16px 0 0;line-height:1.6;color:#d4d4d4;">
-       We hope your vehicle is shining after today's detail.
+       We hope your vehicle is shining after your recent detail.
      </p>
      <p style="margin:16px 0 0;line-height:1.6;color:#d4d4d4;">
        You joined our TikTok promo — share your experience and tag

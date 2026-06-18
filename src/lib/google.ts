@@ -2,7 +2,7 @@ import { google } from 'googleapis';
 
 const BUSINESS_START_HOUR = 8;
 const BUSINESS_END_HOUR = 18;
-const CALENDAR_TIMEZONE = 'America/New_York';
+export const CALENDAR_TIMEZONE = 'America/New_York';
 
 /** Google expects local wall time when timeZone is set — not a UTC string with Z. */
 function toCalendarDateTime(iso: string): string {
@@ -162,6 +162,8 @@ export type CalendarEmailFlags = {
   customerEmail?: string;
   tiktokPromo?: '0' | '1';
   confirmationSent?: '0' | '1';
+  reminderDayBeforeSent?: '0' | '1';
+  /** Legacy flag from 1-hour reminder cron; treated as already sent. */
   reminder1hSent?: '0' | '1';
   tiktokPostSent?: '0' | '1';
 };
@@ -174,7 +176,7 @@ function buildExtendedProperties(
     customerEmail: details.customerEmail ?? '',
     tiktokPromo: details.tiktokPromo ? '1' : '0',
     confirmationSent: '0',
-    reminder1hSent: '0',
+    reminderDayBeforeSent: '0',
     tiktokPostSent: '0',
   };
 }

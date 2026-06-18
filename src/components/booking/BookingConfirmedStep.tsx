@@ -160,7 +160,7 @@ export function BookingConfirmedStep({
               <TimelineStep
                 step={2}
                 title="Reminder before we arrive"
-                body="Our system will email you 1 hour before we arrive so you don't forget — no need to watch the clock."
+                body="Our system will email you the day before your appointment so you don't forget — no need to watch the clock."
               />
               <TimelineStep
                 step={3}
